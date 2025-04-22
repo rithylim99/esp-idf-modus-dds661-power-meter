@@ -1,35 +1,67 @@
-| Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-C6 | ESP32-H2 | ESP32-P4 | ESP32-S2 | ESP32-S3 |
-| ----------------- | ----- | -------- | -------- | -------- | -------- | -------- | -------- | -------- |
+# ESP-IDF Nanomodbus Master Example
 
-# _Sample project_
+This project demonstrates how to use the Nanomodbus library as a Modbus RTU master to communicate with a DDS661 energy meter using an ESP32.
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+## Features
+- Reads multiple parameters from DDS661 Modbus RTU slave device
+- Converts raw register values to floating-point measurements
+- Prints formatted measurements with units to the serial console
+- Uses hardware UART with RS485 transceiver control
+- Includes relay control example
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+## Hardware Requirements
+- ESP32 development board
+- DDS661 energy meter (or compatible Modbus RTU device)
+- RS485 transceiver (e.g., MAX485)
+- Wiring connections:
+  - ESP32 GPIO16 → RS485 RO (receiver out)
+  - ESP32 GPIO17 → RS485 DI (driver in)
+  - ESP32 GPIO4 → RS485 DE/RE (driver enable/receiver enable)
+  - Relay connected to GPIO21
 
+## Software Requirements
+- ESP-IDF v5.3.2
+- Nanomodbus library
 
+## Configuration
+- Modbus RTU slave address: 0x01 (configurable via `RTU_SERVER_ADDRESS`)
+- Baud rate: 9600
+- Parity: Even
+- Stop bits: 1
+- Flow control: None
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
+## Register Map
+The example reads the following registers from the DDS661:
 
-## Example folder contents
+| Address (Hex) | Description         | Unit           | Format         |
+|---------------|---------------------|----------------|----------------|
+| 0x0000        | Voltage             | V              | Floating Point |
+| 0x0008        | Electric Current    | A              | Floating Point |
+| 0x0012        | Active Power        | kW             | Floating Point |
+| 0x002A        | Power Factor        | COS            | Floating Point |
+| 0x0036        | Frequency           | Hz             | Floating Point |
+| 0x0100        | Total Active Power  | kWh            | Floating Point |
 
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
+## Usage
+1. Connect your hardware as described above
+2. Clone the repository
+3. Configure the project (`idf.py menuconfig` if needed)
+4. Build and flash the project (`idf.py build flash monitor`)
+5. The ESP32 will:
+   - Enable relay on GPIO21
+   - Periodically read all configured registers
+   - Print formatted measurements every 5 seconds
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
+## Customization
+- Change `RTU_SERVER_ADDRESS` to match your slave device address
+- Modify `address[]`, `label[]`, and `unit[]` arrays to read different registers
+- Adjust timing parameters in `nmbs_set_read_timeout()` and `nmbs_set_byte_timeout()`
 
-Below is short explanation of remaining files in the project folder.
+## Troubleshooting
+- Verify physical connections (UART pins, RS485 direction control)
+- Check slave device address and baud rate configuration
+- Monitor serial output for error messages
+- Ensure proper termination on the RS485 bus
 
-```
-├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
-```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
+## Author
+Rithy Lim - 2025-04-22
