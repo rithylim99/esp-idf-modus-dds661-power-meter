@@ -1,0 +1,8 @@
+# Ignore build output
+build/
+
+# Ignore VSCode settings
+.vscode/
+
+# Ignore devcontainer configuration
+.devcontainer/
